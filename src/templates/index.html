@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Classifier</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Floating chat button */
+        .chat-fab {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#10b981,#34d399);
+            box-shadow: 0 6px 18px rgba(16,185,129,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            text-decoration: none;
+            color: white;
+        }
+        .chat-fab svg { width:28px; height:28px; }
+        .chat-fab:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <header class="header">
+        <h1><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-leaf" viewBox="0 0 16 16" style="color: var(--primary-green);"><path d="M8.414.166a.5.5 0 0 1 .293.293l5 10a.5.5 0 0 1-.894.448L8 6.012 2.187 15.804a.5.5 0 0 1-.894-.448l5-10a.5.5 0 0 1 .293-.293zM8 5.412a.5.5 0 0 1 .5.5V10a.5.5 0 0 1-1 0V5.912a.5.5 0 0 1 .5-.5z"/></svg> Plant Disease Classifier</h1>
+        <p>AI-powered plant health analysis with personalized treatment recommendations</p>
+    </header>
+
+    <div id="uploader-card" class="card uploader-card">
+        <h2><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-camera" viewBox="0 0 16 16"><path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1v6zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2z"/><path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/></svg> Upload Plant Image</h2>
+        <p>Upload a photo of your plant for disease analysis</p>
+        <input type="file" id="file-input" class="hidden" accept="image/*">
+        <div id="drop-zone">
+            <div id="image-preview-container" class="hidden">
+                <img id="image-preview" src="" alt="Image Preview">
+                <button id="remove-image-btn" title="Remove Image">&times;</button>
+            </div>
+            <div id="upload-prompt">
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16" style="color: #ccc;"><path fill-rule="evenodd" d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2z"/><path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383zm.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"/></svg>
+                <p>Drop your image here, or click to browse</p>
+            </div>
+        </div>
+        <button id="analyze-btn" class="btn">Analyze Plant</button>
+    </div>
+
+    <div id="loader" class="loader hidden"></div>
+
+    <div id="analysis-result-card" class="card hidden">
+        <h2><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16" style="color: var(--primary-green);"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/></svg> Analysis Result</h2>
+        <p><strong>Detected Condition:</strong> <span id="disease-name"></span></p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Prediction Confidence</span>
+            <span id="confidence-badge" class="confidence-badge"></span>
+        </div>
+        <div class="progress-bar-container">
+            <div id="confidence-progress"></div>
+        </div>
+        <div class="result-summary">
+            <p id="result-summary-text"></p>
+        </div>
+        <button id="get-recommendations-btn" class="btn">Get Treatment Recommendations</button>
+        <button id="analyze-another-btn-1" class="btn btn-secondary">Analyze Another Plant</button>
+    </div>
+
+    <div id="recommendations-container" class="hidden">
+        <div class="card recommendation-card">
+            <div>
+                <div class="recommendation-header">
+                    <h3 class="recommendation-title">Immediate Actions</h3>
+                    <span class="tag urgent">Urgent</span>
+                </div>
+                <ul id="immediate-actions-list" class="recommendation-list"></ul>
+            </div>
+            <div>
+                <div class="recommendation-header">
+                    <h3 class="recommendation-title">Preventive Measures</h3>
+                    <span class="tag prevention">Prevention</span>
+                </div>
+                <ul id="preventive-measures-list" class="recommendation-list"></ul>
+            </div>
+            <div>
+                <div class="recommendation-header">
+                    <h3 class="recommendation-title">Long-Term Solutions</h3>
+                    <span class="tag long-term">Long-Term</span>
+                </div>
+                <ul id="long-term-solutions-list" class="recommendation-list"></ul>
+            </div>
+        </div>
+        <div class="button-group">
+            <button id="back-to-analysis-btn" class="btn btn-secondary">Back to Analysis</button>
+            <button id="analyze-another-btn-2" class="btn">Analyze Another Plant</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chat floating action button (opens modal) -->
+<a class="chat-fab" id="open-chat" href="#" aria-label="Open Chat">
+    <!-- chat bubble svg -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M20 2H4a2 2 0 0 0-2 2v14l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+    </svg>
+</a>
+
+<!-- Chat modal (contains an iframe that loads /chat) -->
+<div id="chat-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Chat dialog">
+    <div id="chat-modal-backdrop"></div>
+    <div id="chat-modal-panel">
+        <button id="chat-modal-close" aria-label="Close chat">✕</button>
+        <iframe id="chat-iframe" src="/chat" title="Chat" frameborder="0"></iframe>
+    </div>
+</div>
+
+<style>
+    /* Modal styles */
+    #chat-modal.hidden { display: none; }
+    #chat-modal { position: fixed; inset: 0; z-index: 10000; }
+    #chat-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+    #chat-modal-panel { position: absolute; right: 24px; bottom: 100px; width: 420px; height: 640px; background: white; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+    #chat-modal-close { position: absolute; top: 8px; right: 8px; z-index: 2; background: transparent; border: none; font-size: 18px; cursor: pointer; }
+    #chat-iframe { width: 100%; height: 100%; border: 0; }
+    @media (max-width: 640px) { #chat-modal-panel { left: 12px; right: 12px; bottom: 24px; width: auto; height: 72vh; } }
+</style>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageBtn = document.getElementById('remove-image-btn');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const uploaderCard = document.getElementById('uploader-card');
+    const loader = document.getElementById('loader');
+    const analysisResultCard = document.getElementById('analysis-result-card');
+    const recommendationsContainer = document.getElementById('recommendations-container');
+    const getRecommendationsBtn = document.getElementById('get-recommendations-btn');
+    const diseaseName = document.getElementById('disease-name');
+    const confidenceBadge = document.getElementById('confidence-badge');
+    const confidenceProgress = document.getElementById('confidence-progress');
+    const resultSummaryText = document.getElementById('result-summary-text');
+    const immediateList = document.getElementById('immediate-actions-list');
+    const preventiveList = document.getElementById('preventive-measures-list');
+    const longTermList = document.getElementById('long-term-solutions-list');
+    const analyzeAnotherBtn1 = document.getElementById('analyze-another-btn-1');
+    const backToAnalysisBtn = document.getElementById('back-to-analysis-btn');
+    const analyzeAnotherBtn2 = document.getElementById('analyze-another-btn-2');
+
+    let selectedFile = null;
+    let apiResultData = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+    removeImageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetUploader();
+    });
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+    });
+
+    function handleFile(file) {
+        if (file && file.type.startsWith('image/')) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = e => imagePreview.src = e.target.result;
+            reader.readAsDataURL(file);
+            imagePreviewContainer.classList.remove('hidden');
+            uploadPrompt.classList.add('hidden');
+        }
+    }
+
+    function resetUploader() {
+        selectedFile = null;
+        apiResultData = null;
+        fileInput.value = '';
+        imagePreviewContainer.classList.add('hidden');
+        uploadPrompt.classList.remove('hidden');
+    }
+
+    function startOver() {
+        resetUploader();
+        uploaderCard.classList.remove('hidden');
+        analysisResultCard.classList.add('hidden');
+        recommendationsContainer.classList.add('hidden');
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+        if (!selectedFile) {
+            alert("Please upload an image first!");
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        const API_URL = 'http://127.0.0.1:5000/predict';
+        uploaderCard.classList.add('hidden');
+        loader.classList.remove('hidden');
+        try {
+            const response = await fetch(API_URL, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+            apiResultData = await response.json();
+            displayAnalysisResult(apiResultData);
+        } catch (error) {
+            console.error('API Error:', error);
+            alert(`Failed to analyze plant. Please ensure the server is running and accessible.`);
+            startOver();
+        } finally {
+            loader.classList.add('hidden');
+        }
+    });
+
+    function displayAnalysisResult(data) {
+        diseaseName.textContent = data.disease;
+        const confidence = parseFloat(data.confidence) || 0;
+        confidenceBadge.textContent = `${confidence}% Confidence`;
+        confidenceProgress.style.width = `${confidence}%`;
+
+        const specialCases = ["Not a Plant", "Unrecognized Condition"];
+        const isSpecialCase = specialCases.includes(data.disease);
+        const isHealthy = data.disease.toLowerCase().includes('healthy');
+
+        if (isSpecialCase) {
+            resultSummaryText.textContent = data.care_plan;
+            getRecommendationsBtn.classList.add('hidden');
+        } else if (isHealthy) {
+            resultSummaryText.textContent = "Your plant appears to be in good health. Continue with your current care routine.";
+            getRecommendationsBtn.classList.add('hidden');
+        } else {
+            resultSummaryText.textContent = `The analysis indicates your plant may have ${data.disease}. Click the button below for a detailed care plan.`;
+            getRecommendationsBtn.classList.remove('hidden');
+        }
+        analysisResultCard.classList.remove('hidden');
+    }
+
+    getRecommendationsBtn.addEventListener('click', async () => {
+        if (!apiResultData) return;
+        analysisResultCard.classList.add('hidden');
+        recommendationsContainer.classList.remove('hidden');
+
+        // Show temporary loading placeholders
+        immediateList.innerHTML = '<li>Loading...</li>';
+        preventiveList.innerHTML = '<li>Loading...</li>';
+        longTermList.innerHTML = '<li>Loading...</li>';
+
+        try {
+            const payload = { disease: apiResultData.disease || apiResultData.disease, risk: apiResultData.risk || 'Not available' };
+            const response = await fetch('http://127.0.0.1:5000/recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to fetch recommendations');
+            }
+
+            const data = await response.json();
+            // If structured data exists, render it; otherwise fall back to free-text parser
+            // Prefer structured recommendations only when they contain items.
+            const structured = data.care_plan_structured || {};
+            const hasStructuredItems = (arrName) => Array.isArray(structured[arrName]) && structured[arrName].length > 0;
+
+            if (data.care_plan_structured && (hasStructuredItems('Immediate Actions') || hasStructuredItems('Preventive Measures') || hasStructuredItems('Long-Term Solutions'))) {
+                renderStructuredRecommendations(structured);
+            } else if (data.care_plan && (!data.care_plan_structured || !(hasStructuredItems('Immediate Actions') || hasStructuredItems('Preventive Measures') || hasStructuredItems('Long-Term Solutions')))) {
+                // Fallback: parse free-text care_plan into lists if structured data is missing or empty
+                parseAndDisplayRecommendations(data.care_plan);
+            } else {
+                throw new Error('No recommendations returned');
+            }
+        } catch (err) {
+            console.error('Recommendation error:', err);
+            alert('Could not fetch treatment recommendations. Please try again later.');
+            // restore analysis view so user can retry
+            recommendationsContainer.classList.add('hidden');
+            analysisResultCard.classList.remove('hidden');
+        }
+    });
+
+    function renderStructuredRecommendations(structured) {
+        immediateList.innerHTML = '';
+        preventiveList.innerHTML = '';
+        longTermList.innerHTML = '';
+
+        (structured['Immediate Actions'] || []).forEach(item => {
+            const li = document.createElement('li'); li.textContent = item; immediateList.appendChild(li);
+        });
+        (structured['Preventive Measures'] || []).forEach(item => {
+            const li = document.createElement('li'); li.textContent = item; preventiveList.appendChild(li);
+        });
+        (structured['Long-Term Solutions'] || []).forEach(item => {
+            const li = document.createElement('li'); li.textContent = item; longTermList.appendChild(li);
+        });
+    }
+
+    function parseAndDisplayRecommendations(carePlan) {
+        // Fallback: existing text parser (keeps previous robust parsing logic)
+        immediateList.innerHTML = '';
+        preventiveList.innerHTML = '';
+        longTermList.innerHTML = '';
+
+        const sections = {
+            'immediate actions': immediateList,
+            'preventive measures': preventiveList,
+            'long-term solutions': longTermList
+        };
+
+        let currentList = null;
+        if (!carePlan) return;
+
+        console.log('Raw care plan (fallback):', carePlan);
+
+        const lines = carePlan.split('\n');
+
+        lines.forEach(rawLine => {
+            let line = rawLine.trim();
+            if (!line) return;
+
+            const lower = line.toLowerCase();
+            if (lower.includes('immediate actions')) { currentList = sections['immediate actions']; return; }
+            if (lower.includes('preventive measures') || lower.includes('preventive measure')) { currentList = sections['preventive measures']; return; }
+            if (lower.includes('long-term solutions') || lower.includes('long term solutions') || lower.includes('long-term')) { currentList = sections['long-term solutions']; return; }
+
+            const listMarkerRegex = /^(-|\*|•|\u2022|\d+\.)\s*/;
+            const startsWithNonAscii = /^[^\x00-\x7F]+\s+/;
+
+            if (currentList && (listMarkerRegex.test(line) || startsWithNonAscii.test(line))) {
+                let itemText = line.replace(listMarkerRegex, '').replace(/^[^A-Za-z0-9]+/, '').trim();
+                if (!itemText) return;
+                const li = document.createElement('li'); li.textContent = itemText; currentList.appendChild(li);
+                return;
+            }
+
+            if (currentList && line.length > 0) {
+                const maybeSentence = line.replace(/^[-*•\s]+/, '').trim();
+                if (maybeSentence.length > 20) {
+                    const li = document.createElement('li'); li.textContent = maybeSentence; currentList.appendChild(li);
+                }
+            }
+        });
+    }
+
+    analyzeAnotherBtn1.addEventListener('click', startOver);
+    analyzeAnotherBtn2.addEventListener('click', startOver);
+    backToAnalysisBtn.addEventListener('click', () => {
+        recommendationsContainer.classList.add('hidden');
+        analysisResultCard.classList.remove('hidden');
+    });
+</script>
+
+<script>
+    // Chat modal open/close behavior
+    const openChatBtn = document.getElementById('open-chat');
+    const chatModal = document.getElementById('chat-modal');
+    const chatBackdrop = document.getElementById('chat-modal-backdrop');
+    const chatClose = document.getElementById('chat-modal-close');
+
+    function openChat(e) {
+        if (e) e.preventDefault();
+        chatModal.classList.remove('hidden');
+        // reload iframe to ensure fresh session each open
+        const iframe = document.getElementById('chat-iframe');
+        iframe.src = '/chat';
+    }
+
+    function closeChat() {
+        chatModal.classList.add('hidden');
+        const iframe = document.getElementById('chat-iframe');
+        iframe.src = 'about:blank';
+    }
+
+    openChatBtn.addEventListener('click', openChat);
+    chatBackdrop.addEventListener('click', closeChat);
+    chatClose.addEventListener('click', closeChat);
+</script>
+
+</body>
+</html>

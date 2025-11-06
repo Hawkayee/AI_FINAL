@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>உழவன் நண்பன் - Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arima', cursive;
+        }
+        #chat-window {
+            height: 70vh;
+        }
+        .user-message {
+            background-color: #DCF8C6;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #FFFFFF;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg flex flex-col">
+        <header class="bg-green-600 text-white p-4 rounded-t-lg text-center">
+            <h1 class="text-2xl font-bold">உழவன் நண்பன்</h1>
+            <p class="text-sm">உங்கள் விவசாய உதவியாளர்</p>
+        </header>
+
+        <div id="chat-window" class="p-4 overflow-y-auto flex-grow flex flex-col space-y-4">
+            <!-- Chat messages will appear here -->
+            <div class="bot-message p-3 rounded-lg shadow-md max-w-xs md:max-w-md">
+                <p>வணக்கம்! நான் உங்கள் உழவன் நண்பன். உங்கள் விவசாயம் சம்பந்தமான கேள்விகளைக் கேளுங்கள்.</p>
+            </div>
+        </div>
+        
+        <div id="loading-indicator" class="hidden p-4 text-center">
+            <p class="text-gray-500">சிந்திக்கிறேன்...</p>
+        </div>
+
+        <footer class="p-4 border-t border-gray-200 flex items-center space-x-2">
+            <input type="text" id="message-input" class="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="இங்கே தட்டச்சு செய்யவும்...">
+            
+            <button id="send-button" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            </button>
+
+            <button id="voice-button" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const voiceButton = document.getElementById('voice-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const micIcon = document.getElementById('mic-icon');
+
+        // Generate a unique session ID for this chat session
+        const sessionId = 'sess_' + Date.now() + Math.random().toString(36).substr(2, 9);
+
+        // --- Text-to-Speech Setup (for bot's voice) ---
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        function populateVoiceList() {
+            voices = synth.getVoices();
+        }
+        populateVoiceList();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        // Try to pick a Tamil voice when available, else fall back gracefully.
+        let _voice_warned = false;
+        function speak(text) {
+            if (synth.speaking) {
+                console.error('SpeechSynthesis.speaking');
+                return;
+            }
+            const utterThis = new SpeechSynthesisUtterance(text);
+            // Find a Tamil voice with a few heuristics
+            let tamilVoice = null;
+            // 1) exact lang prefix
+            tamilVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ta'));
+            // 2) name contains 'Tamil'
+            if (!tamilVoice) tamilVoice = voices.find(v => /tamil/i.test(v.name || ''));
+            // 3) any Indian English voice as a more natural fallback
+            if (!tamilVoice) tamilVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en') && /india/i.test(v.name || ''));
+
+            if (tamilVoice) {
+                utterThis.voice = tamilVoice;
+            } else {
+                if (!_voice_warned) {
+                    console.warn("Tamil (ta-IN) voice not found. Using default voice.");
+                    _voice_warned = true;
+                }
+            }
+            utterThis.pitch = 1;
+            utterThis.rate = 1;
+            synth.speak(utterThis);
+        }
+
+        // --- Speech-to-Text Setup (for user's voice) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'ta-IN'; // Set language to Tamil
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                messageInput.value = transcript;
+                sendMessage(); // Automatically send after transcription
+            };
+
+            recognition.onspeechend = () => {
+                stopRecording();
+            };
+            
+            recognition.onerror = (event) => {
+                console.error(`Speech recognition error: ${event.error}`);
+                stopRecording();
+            };
+
+        } else {
+            console.warn("Speech Recognition not supported in this browser.");
+            voiceButton.disabled = true;
+        }
+
+        function startRecording() {
+            if (recognition && !isRecording) {
+                recognition.start();
+                isRecording = true;
+                micIcon.classList.add('text-red-500', 'animate-pulse');
+                voiceButton.classList.add('ring-2', 'ring-red-500');
+            }
+        }
+        
+        function stopRecording() {
+            if (recognition && isRecording) {
+                recognition.stop();
+                isRecording = false;
+                micIcon.classList.remove('text-red-500', 'animate-pulse');
+                voiceButton.classList.remove('ring-2', 'ring-red-500');
+            }
+        }
+
+
+    // --- Chat Functions ---
+        function addMessage(text, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('p-3', 'rounded-lg', 'shadow-md', 'max-w-xs', 'md:max-w-md', `${sender}-message`);
+            messageElement.innerHTML = `<p>${text}</p>`;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
+            
+            if (sender === 'bot') {
+                const speakButton = document.createElement('button');
+                speakButton.innerHTML = '🔊';
+                speakButton.className = 'text-xs ml-2';
+                speakButton.onclick = () => speak(text);
+                messageElement.appendChild(speakButton);
+            }
+        }
+
+        async function sendMessage() {
+            // prevent duplicate sends while awaiting response
+            if (window.isAwaiting) return;
+            const messageText = messageInput.value.trim();
+            if (messageText === '') return;
+
+            // mark awaiting state and disable input/button
+            window.isAwaiting = true;
+            sendButton.disabled = true;
+            messageInput.disabled = true;
+
+            addMessage(messageText, 'user');
+            messageInput.value = '';
+            loadingIndicator.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/chat_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: messageText, session_id: sessionId })
+                });
+
+                if (!response.ok) {
+                    // try to parse JSON error message
+                    let txt = await response.text();
+                    console.error(`HTTP error! status: ${response.status}`, txt);
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data && data.response) {
+                    addMessage(data.response, 'bot');
+                    speak(data.response); // Automatically speak the bot's response
+                } else {
+                    console.error('Invalid response from server', data);
+                    addMessage("மன்னிக்கவும், ஒரு பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.", 'bot');
+                }
+
+            } catch (error) {
+                console.error("Error sending message:", error);
+                // show a concise Tamil error if API failed
+                addMessage("மன்னிக்கவும், ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.", 'bot');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                // re-enable input/button and clear awaiting flag
+                window.isAwaiting = false;
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        voiceButton.addEventListener('click', () => {
+            if(isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+    </script>
+</body>
+</html>

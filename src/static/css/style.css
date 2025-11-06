@@ -1,0 +1,276 @@
+/* style.css */
+
+:root {
+    --primary-green: #2ecc71;
+    --gradient-start: #28b485;
+    --gradient-end: #7dd56f;
+    --light-green-bg: #f0fff4;
+    --text-dark: #333;
+    --text-light: #555;
+    --border-color: #e0e0e0;
+    --white: #fff;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --urgent-red: #e74c3c;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Match dashboard background: soft blue gradient */
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    /* subtle leaves texture layered under the gradient for a gentle pattern */
+    background-image: linear-gradient(135deg, rgba(240,249,255,0.9), rgba(224,242,254,0.9)), url('https://www.transparenttextures.com/patterns/subtle-leaves.png');
+    background-blend-mode: overlay;
+    background-repeat: repeat;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.header {
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.header p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-top: -1rem;
+}
+
+.card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+/* Uploader specific styles */
+.uploader-card h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+}
+
+#drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+    transition: background-color 0.3s, border-color 0.3s;
+    cursor: pointer;
+}
+
+#drop-zone.dragover {
+    background-color: var(--light-green-bg);
+    border-color: var(--primary-green);
+}
+
+#image-preview-container {
+    position: relative;
+    margin-top: 1.5rem;
+}
+
+#image-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+}
+
+#remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--urgent-red);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn {
+    background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background-image: none;
+    background-color: #f0f2f5;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: #e9ecef;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button-group .btn {
+    width: 50%;
+}
+
+/* Results specific styles */
+#analysis-result-card h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.confidence-badge {
+    background: #eafaf1;
+    color: var(--primary-green);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.progress-bar-container {
+    width: 100%;
+    background: #e9ecef;
+    border-radius: 50px;
+    height: 1rem;
+    margin: 1rem 0;
+}
+
+#confidence-progress {
+    height: 100%;
+    background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    border-radius: 50px;
+}
+
+.result-summary {
+    background: var(--light-green-bg);
+    border-left: 4px solid var(--primary-green);
+    text-align: left;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+/* Recommendations card */
+.recommendation-card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recommendation-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+}
+
+.tag.urgent { background: #fee2e2; color: #ef4444; }
+.tag.prevention { background: #dbeafe; color: #3b82f6; }
+.tag.long-term { background: #d1fae5; color: #10b981; }
+
+.recommendation-list {
+    list-style: none;
+    padding-left: 1rem;
+    margin: 0;
+}
+
+.recommendation-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.recommendation-list li::before {
+    content: '🌿';
+    position: absolute;
+    left: 0;
+    top: 0px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Loader */
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-green);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

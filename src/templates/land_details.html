@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmCare Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2ecc71;
+            font-size: 26px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .welcome-text {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            color: #2ecc71;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fafafa;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2ecc71;
+            background: white;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover {
+            background: #27ae60;
+        }
+
+        .recommendations {
+            display: none;
+        }
+
+        .recommendations.show {
+            display: block;
+        }
+
+        .recommendation-section {
+            margin-bottom: 25px;
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-title {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recommendation-list li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .recommendation-list li::before {
+            content: '•';
+            position: absolute;
+            left: 10px;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .detect-disease-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            text-align: center;
+        }
+
+        .detect-disease-card h2 {
+            color: #2ecc71;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .detect-disease-card p {
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .detect-btn {
+            padding: 14px 40px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .detect-btn:hover {
+            background: #27ae60;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌿 FarmCare Dashboard</h1>
+            <div class="header-right">
+                <span class="welcome-text">Welcome, <span id="farmerName"></span>!</span>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Land Information Form -->
+        <div class="card">
+            <h2 class="card-title">📍 Land Information</h2>
+            
+            <form id="landForm">
+                <div class="form-group">
+                    <label for="plants">What plants are growing on your land?</label>
+                    <textarea 
+                        id="plants" 
+                        name="plants"
+                        placeholder="E.g., Tomatoes, Rice, Wheat, Cotton..."
+                        required
+                    ></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="acres">Total Land Area (in acres)</label>
+                    <input 
+                        type="number" 
+                        id="acres" 
+                        name="acres"
+                        step="0.1"
+                        placeholder="E.g., 5.5"
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    🌱 Get Recommendations
+                </button>
+            </form>
+        </div>
+
+        <!-- Recommendations -->
+        <div id="recommendations" class="card recommendations">
+            <h2 class="card-title">🌱 Personalized Recommendations</h2>
+            
+            <div class="recommendation-section">
+                <div class="recommendation-header">
+                    <span style="font-size: 20px;">🌱</span>
+                    <h3 class="recommendation-title">Growth Improvement</h3>
+                </div>
+                <ul id="growthList" class="recommendation-list"></ul>
+            </div>
+
+            <div class="recommendation-section">
+                <div class="recommendation-header">
+                    <span style="font-size: 20px;">🌿</span>
+                    <h3 class="recommendation-title">Eco-Friendly Pesticides</h3>
+                </div>
+                <ul id="pesticidesList" class="recommendation-list"></ul>
+            </div>
+
+            <div class="recommendation-section">
+                <div class="recommendation-header">
+                    <span style="font-size: 20px;">💡</span>
+                    <h3 class="recommendation-title">Expert Tips</h3>
+                </div>
+                <ul id="tipsList" class="recommendation-list"></ul>
+            </div>
+        </div>
+
+        <!-- Detect Plant Disease -->
+        <div class="card detect-disease-card">
+            <h2>Detect Plant Disease</h2>
+            <p>Upload a photo of your plant to get AI-powered disease analysis and treatment recommendations</p>
+            <button class="detect-btn" onclick="window.location.href='/disease_detection'">Detect Disease</button>
+        </div>
+    </div>
+
+    <script>
+        const farmerNameSpan = document.getElementById('farmerName');
+        const landForm = document.getElementById('landForm');
+        const plantsInput = document.getElementById('plants');
+        const acresInput = document.getElementById('acres');
+        const recommendationsDiv = document.getElementById('recommendations');
+
+        // Check authentication
+        window.addEventListener('load', () => {
+            const loggedInUser = localStorage.getItem('farmerUsername');
+            if (!loggedInUser) {
+                window.location.href = '/farmer_login';
+                return;
+            }
+            farmerNameSpan.textContent = loggedInUser;
+            
+            // Load saved land details if any
+            const savedDetails = localStorage.getItem(`landDetails_${loggedInUser}`);
+            if (savedDetails) {
+                const details = JSON.parse(savedDetails);
+                plantsInput.value = details.plants;
+                acresInput.value = details.acres;
+                displayRecommendations(details.plants);
+            }
+        });
+
+        function handleLogout() {
+            localStorage.removeItem('farmerUsername');
+            window.location.href = '/farmer_login';
+        }
+
+        landForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const farmerName = localStorage.getItem('farmerUsername');
+            const plants = plantsInput.value;
+            const acres = acresInput.value;
+            
+            // Save land details
+            localStorage.setItem(`landDetails_${farmerName}`, JSON.stringify({
+                plants,
+                acres,
+                timestamp: new Date().toISOString()
+            }));
+            
+            displayRecommendations(plants);
+        });
+
+        function displayRecommendations(plants) {
+            const plantList = plants.toLowerCase();
+            const recommendations = {
+                growth: [],
+                pesticides: [],
+                tips: []
+            };
+
+            // Basic recommendations based on common crops
+            if (plantList.includes('tomato') || plantList.includes('vegetable')) {
+                recommendations.growth.push('Apply organic compost every 2-3 weeks');
+                recommendations.growth.push('Ensure 6-8 hours of sunlight daily');
+                recommendations.pesticides.push('Neem oil spray for aphids and whiteflies');
+                recommendations.pesticides.push('Bacillus thuringiensis for caterpillar control');
+                recommendations.tips.push('Mulch around plants to retain moisture');
+                recommendations.tips.push('Prune lower leaves for better air circulation');
+            }
+
+            if (plantList.includes('rice') || plantList.includes('paddy')) {
+                recommendations.growth.push('Maintain water level at 2-3 inches during growing season');
+                recommendations.growth.push('Apply nitrogen-rich fertilizer after transplanting');
+                recommendations.pesticides.push('Use Trichoderma for biological pest control');
+                recommendations.pesticides.push('Neem cake for soil treatment');
+                recommendations.tips.push('Monitor for brown plant hopper regularly');
+                recommendations.tips.push('Practice crop rotation to prevent disease buildup');
+            }
+
+            // Generic recommendations if no specific crop matched
+            if (recommendations.growth.length === 0) {
+                recommendations.growth.push('Regular soil testing to maintain optimal pH levels');
+                recommendations.growth.push('Implement drip irrigation for water efficiency');
+                recommendations.pesticides.push('Use neem-based organic pesticides');
+                recommendations.pesticides.push('Encourage beneficial insects through companion planting');
+                recommendations.tips.push('Rotate crops annually to prevent soil depletion');
+                recommendations.tips.push('Use organic mulch to suppress weeds and retain moisture');
+            }
+
+            // Display recommendations
+            const growthList = document.getElementById('growthList');
+            const pesticidesList = document.getElementById('pesticidesList');
+            const tipsList = document.getElementById('tipsList');
+
+            growthList.innerHTML = recommendations.growth.map(item => `<li>${item}</li>`).join('');
+            pesticidesList.innerHTML = recommendations.pesticides.map(item => `<li>${item}</li>`).join('');
+            tipsList.innerHTML = recommendations.tips.map(item => `<li>${item}</li>`).join('');
+
+            recommendationsDiv.classList.add('show');
+        }
+    </script>
+
+    <!-- Chat floating action button (opens modal) - added to dashboard -->
+    <a class="chat-fab" id="open-chat" href="#" aria-label="Open Chat" style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" aria-hidden="true" width="28" height="28">
+            <path d="M20 2H4a2 2 0 0 0-2 2v14l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+        </svg>
+    </a>
+
+    <!-- Chat modal (contains an iframe that loads /chat) -->
+    <div id="chat-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Chat dialog">
+        <div id="chat-modal-backdrop"></div>
+        <div id="chat-modal-panel">
+            <button id="chat-modal-close" aria-label="Close chat">✕</button>
+            <iframe id="chat-iframe" src="/chat" title="Chat" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <style>
+        /* Chat FAB styles (dashboard) */
+        .chat-fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#10b981,#34d399);
+            box-shadow: 0 6px 18px rgba(16,185,129,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+        }
+
+        /* Modal styles */
+        #chat-modal.hidden { display: none; }
+        #chat-modal { position: fixed; inset: 0; z-index: 10000; }
+        #chat-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+        #chat-modal-panel { position: absolute; right: 24px; bottom: 100px; width: 420px; height: 640px; background: white; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        #chat-modal-close { position: absolute; top: 8px; right: 8px; z-index: 2; background: transparent; border: none; font-size: 18px; cursor: pointer; }
+        #chat-iframe { width: 100%; height: 100%; border: 0; }
+        @media (max-width: 640px) { #chat-modal-panel { left: 12px; right: 12px; bottom: 24px; width: auto; height: 72vh; } }
+    </style>
+
+    <script>
+        // Chat modal open/close behavior (dashboard)
+        const openChatBtn = document.getElementById('open-chat');
+        const chatModal = document.getElementById('chat-modal');
+        const chatBackdrop = document.getElementById('chat-modal-backdrop');
+        const chatClose = document.getElementById('chat-modal-close');
+
+        function openChat(e) {
+            if (e) e.preventDefault();
+            chatModal.classList.remove('hidden');
+            const iframe = document.getElementById('chat-iframe');
+            iframe.src = '/chat';
+        }
+
+        function closeChat() {
+            chatModal.classList.add('hidden');
+            const iframe = document.getElementById('chat-iframe');
+            iframe.src = 'about:blank';
+        }
+
+        openChatBtn.addEventListener('click', openChat);
+        chatBackdrop.addEventListener('click', closeChat);
+        chatClose.addEventListener('click', closeChat);
+    </script>
+</body>
+</html>
