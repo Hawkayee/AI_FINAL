@@ -1,0 +1,22 @@
+$ignore = @"
+# Notebooks and checkpoints
+notebooks/
+*.ipynb
+model-training.ipynb
+.ipynb_checkpoints/
+
+# Dataset / large data (do not upload)
+dataset/
+data/
+
+# Local secrets and config
+.env
+secrets.json
+
+# Model checkpoints / large artifacts
+ml_models/
+src/ml_models/
+*.pth
+*.pt
+*.h5
+"@
