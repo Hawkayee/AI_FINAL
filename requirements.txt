@@ -1,0 +1,8 @@
+flask
+flask_cors
+torch
+torchvision
+Pillow
+google-generativeai
+requests
+ultralytics
